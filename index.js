@@ -30,6 +30,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
         let message = info[1]
         if (!message.includes('TIME') || !message.includes('ONLINE')) {
           let mid = info[2][0]
+          let uname = info[2][1]
           let date = new Date()
           let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
           let time = `${date.getHours()}:${date.getMinutes()}`
@@ -41,16 +42,22 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
             let lastFIleName = currentFilename
             currentFilename = filename
             if (speakerNum) {
+              let allSpeaker = Object.keys(speakers)
+                .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
+                .join(',')
               speakers = {}
-              await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum}\n`)
+              await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};{allSpeaker}\n`)
             }
           }
-          speakers[mid] = true
+          if (!speakers[mid]) {
+            speakers[mid] = { count: 0, uname }
+          }
+          speakers[mid].count++
           if (lastTime !== time) {
             lastTime = time
             await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
           }
-          await fs.appendFile(`${roomid}/${filename}`, `${message}\n`)
+          await fs.appendFile(`${roomid}/${filename}`, `${mid}:${message}\n`)
           // console.log(`${roomid}: ${message}`)
         }
       }
