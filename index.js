@@ -46,7 +46,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
                 .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
                 .join(',')
               speakers = {}
-              await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};{allSpeaker}\n`)
+              await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};{allSpeaker}\nV1\n`)
             }
           }
           if (!speakers[mid]) {
@@ -58,17 +58,10 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
             await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
           }
           await fs.appendFile(`${roomid}/${filename}`, `${mid}:${message}\n`)
-          // console.log(`${roomid}: ${message}`)
         }
       }
     })
   })
-  // ws.on('SEND_GIFT', ({ data }) => {
-  //   if (data.giftName === '节奏风暴') {
-  // 		console.log(data)
-  // 		storm.push(data.metadata)
-  //   }
-  // })
   ws.on('heartbeat', async () => {
     let date = new Date()
     let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
@@ -80,8 +73,11 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
       let lastFIleName = currentFilename
       currentFilename = filename
       if (speakerNum) {
+        let allSpeaker = Object.keys(speakers)
+          .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
+          .join(',')
         speakers = {}
-        await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum}\n`)
+        await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};{allSpeaker}\nV1\n`)
       }
     }
   })
