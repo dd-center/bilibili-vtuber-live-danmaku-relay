@@ -10,6 +10,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 let rooms = {}
 
 const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new Promise(resolve => {
+  console.log(`OPEN: ${roomid}`)
   let ws = new LiveWS(roomid)
   rooms[roomid] = ws
   let lastTime = ''
@@ -147,4 +148,5 @@ socket.on('info', async info => {
         watch(roomid)
       }
     })
+  console.log('REFRESH')
 })
