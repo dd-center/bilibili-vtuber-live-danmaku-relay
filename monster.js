@@ -1,9 +1,29 @@
+const http = require('http')
+const fs = require('fs').promises
+
+http.createServer(async (request, response) => {
+  if (!Number.isNaN(Number(request.url.split('/')[1]))) {
+    fs.readFile(`.${request.url}`)
+      .then(buf => {
+        response.writeHead(200, { 'Content-Type': 'text/plain' })
+        response.end(String(buf), 'utf-8')
+      })
+      .catch(() => {
+        response.writeHead(404)
+        response.end()
+      })
+  } else {
+    response.writeHead(404)
+    response.end()
+  }
+}).listen(8012)
+
 // const fs = require('fs').promises
 
 // const nodejieba = require('nodejieba')
 
-const Server = require('socket.io')
-const io = new Server(9002, { serveClient: false, path: '/' })
+// const Server = require('socket.io')
+// const io = new Server(9002, { serveClient: false, path: '/' })
 
 // nodejieba.load({
 //   userDict: 'dictionary/userdict.txt',
