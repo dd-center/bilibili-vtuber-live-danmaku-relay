@@ -5,7 +5,7 @@ http.createServer(async (request, response) => {
   if (!Number.isNaN(Number(request.url.split('/')[1]))) {
     fs.readFile(`.${request.url}`)
       .then(buf => {
-        response.writeHead(200, { 'Content-Type': 'text/plain', charset: 'utf-8' })
+        response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' })
         response.end(String(buf), 'utf-8')
       })
       .catch(() => {
