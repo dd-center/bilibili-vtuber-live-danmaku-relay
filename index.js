@@ -3,6 +3,9 @@ const fs = require('fs').promises
 const io = require('socket.io-client')
 const socket = io('http://0.0.0.0:8001')
 
+const Server = require('socket.io')
+const dispatch = new Server(9003, { serveClient: false })
+
 const LiveWS = require('bilibili-live-ws')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -65,6 +68,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
           lastTime = time
           await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
         }
+        dispatch.emit('danmaku', { message, roomid, mid })
         await fs.appendFile(`${roomid}/${filename}`, `${mid}:${message}\n`)
       }
     }
