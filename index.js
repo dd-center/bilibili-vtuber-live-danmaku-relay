@@ -36,7 +36,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
   ws.once('live', () => {
     console.log(`READY: ${roomid}`)
   })
-  ws.on('DANMU_MSG:4:0:2:2:2:0', async ({ info }) => {
+  ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
       if (!message.includes('TIME') || !message.includes('ONLINE')) {
