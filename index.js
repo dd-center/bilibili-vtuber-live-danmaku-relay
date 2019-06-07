@@ -11,6 +11,7 @@ const LiveWS = require('bilibili-live-ws')
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let rooms = {}
+let roomMid = {}
 
 const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new Promise(resolve => {
   console.log(`OPEN: ${roomid}`)
@@ -36,10 +37,10 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
   ws.once('live', () => {
     console.log(`READY: ${roomid}`)
   })
-  ws.on('LIVE', () => dispatch.emit('LIVE', roomid))
-  ws.on('PREPARING', () => dispatch.emit('PREPARING', roomid))
-  ws.on('ROUND', () => dispatch.emit('ROUND', roomid))
-  ws.on('heartbeat', online => dispatch.emit('online', { roomid, online }))
+  ws.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid: roomMid[roomid] }))
+  ws.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid: roomMid[roomid] }))
+  ws.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid: roomMid[roomid] }))
+  ws.on('heartbeat', online => dispatch.emit('online', { roomid, mid: roomMid[roomid], online }))
   ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
@@ -145,9 +146,10 @@ const watch = async roomid => {
 
 socket.on('info', async info => {
   let folders = await fs.readdir('.')
-  info.map(({ roomid }) => roomid)
-    .filter(roomid => roomid)
-    .forEach(async roomid => {
+  info
+    .filter(({ roomid }) => roomid)
+    .forEach(async ({ roomid, mid }) => {
+      roomMid[roomid] = mid
       if (!rooms[roomid]) {
         rooms[roomid] = true
         if (!folders.includes(String(roomid))) {
