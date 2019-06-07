@@ -3,11 +3,15 @@ const writer = require("./rec.js").recorder
 const io = require('socket.io-client')
 const socket = io('http://0.0.0.0:8001')
 
+const Server = require('socket.io')
+const dispatch = new Server(9003, { serveClient: false })
+
 const LiveWS = require('bilibili-live-ws')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let rooms = {}
+let roomMid = {}
 
 const request = require('request-promise')
 async function getLiveInfo(roomid) {
@@ -63,6 +67,10 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
     writer.recordStatus(roomid, initinfo.status, false)
     writer.recordTitle(roomid, initinfo.title)
   })*/
+  ws.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid: roomMid[roomid] }))
+  ws.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid: roomMid[roomid] }))
+  ws.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid: roomMid[roomid] }))
+  ws.on('heartbeat', online => dispatch.emit('online', { roomid, mid: roomMid[roomid], online }))
   ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
@@ -70,6 +78,54 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
         let mid = info[2][0]
         let timestamp = info[0][4]
         writer.record(roomid, mid, message)
+  //       let uname = info[2][1]
+  //       let date = new Date()
+  //       let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
+  //       let time = `${date.getHours()}:${date.getMinutes()}`
+  //       if (!currentFilename) {
+  //         currentFilename = filename
+  //       }
+  //       if (currentFilename !== filename) {
+  //         let speakerNum = Object.keys(speakers).length
+  //         let lastFIleName = currentFilename
+  //         currentFilename = filename
+  //         if (speakerNum) {
+  //           let allSpeaker = Object.keys(speakers)
+  //             .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
+  //             .join(',')
+  //           speakers = {}
+  //           await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV1\n`)
+  //         }
+  //       }
+  //       if (!speakers[mid]) {
+  //         speakers[mid] = { count: 0, uname }
+  //       }
+  //       speakers[mid].count++
+  //       if (lastTime !== time) {
+  //         lastTime = time
+  //         await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
+  //       }
+  //       dispatch.emit('danmaku', { message, roomid, mid })
+  //       await fs.appendFile(`${roomid}/${filename}`, `${mid}:${message}\n`)
+  //     }
+  //   }
+  // })
+  // ws.on('heartbeat', async () => {
+  //   let date = new Date()
+  //   let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
+  //   if (!currentFilename) {
+  //     currentFilename = filename
+  //   }
+  //   if (currentFilename !== filename) {
+  //     let speakerNum = Object.keys(speakers).length
+  //     let lastFIleName = currentFilename
+  //     currentFilename = filename
+  //     if (speakerNum) {
+  //       let allSpeaker = Object.keys(speakers)
+  //         .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
+  //         .join(',')
+  //       speakers = {}
+  //       await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV1\n`)
       }
     }
   })
@@ -130,9 +186,11 @@ const watch = async roomid => {
 }
 
 socket.on('info', async info => {
-  info.map(({ roomid }) => roomid)
-    .filter(roomid => roomid)
-    .forEach(async roomid => {
+  let folders = await fs.readdir('.')
+  info
+    .filter(({ roomid }) => roomid)
+    .forEach(async ({ roomid, mid }) => {
+      roomMid[roomid] = mid
       if (!rooms[roomid]) {
         rooms[roomid] = true
         watch(roomid)
