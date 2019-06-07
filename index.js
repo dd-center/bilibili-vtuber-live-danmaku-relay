@@ -39,6 +39,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
   ws.on('LIVE', () => dispatch.emit('LIVE', roomid))
   ws.on('PREPARING', () => dispatch.emit('PREPARING', roomid))
   ws.on('ROUND', () => dispatch.emit('ROUND', roomid))
+  ws.on('heartbeat', online => dispatch.emit('online', { roomid, online }))
   ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
