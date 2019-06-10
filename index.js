@@ -48,6 +48,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
         let mid = info[2][0]
         let uname = info[2][1]
         let date = new Date()
+        let timestamp = date.getTime()
         let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
         let time = `${date.getHours()}:${date.getMinutes()}`
         if (!currentFilename) {
@@ -74,7 +75,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
           await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
         }
         dispatch.emit('danmaku', { message, roomid, mid })
-        await fs.appendFile(`${roomid}/${filename}`, `${mid}:${message}\n`)
+        await fs.appendFile(`${roomid}/${filename}`, `${timestamp}:${mid}:${message}\n`)
       }
     }
   })
