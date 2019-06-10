@@ -63,7 +63,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
               .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
               .join(',')
             speakers = {}
-            await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV1\n`)
+            await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV2\n`)
           }
         }
         if (!speakers[mid]) {
@@ -94,7 +94,7 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
           .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
           .join(',')
         speakers = {}
-        await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV1\n`)
+        await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV2\n`)
       }
     }
   })
