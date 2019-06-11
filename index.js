@@ -45,6 +45,14 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
       dispatch.emit('danmaku', { message, roomid, mid, uname })
     }
   })
+  ws.on('SEND_GIFT', payload => {
+    let coinType = payload.data.coin_type
+    let mid = payload.data.uid
+    let giftId = payload.data.giftId
+    let totalCoin = payload.data.total_coin
+    dispatch.emit('gift', { roomid, mid, giftId, totalCoin, coinType })
+  })
+
   ws.on('heartbeat', () => {
     lastHeartbeat = new Date().getTime()
     timeout = setTimeout(() => {
