@@ -1,5 +1,3 @@
-const fs = require('fs').promises
-
 const io = require('socket.io-client')
 const socket = io('http://0.0.0.0:8001')
 
@@ -13,16 +11,15 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 let rooms = {}
 let roomMid = {}
 
-const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new Promise(resolve => {
+const openRoom = ({ roomid }) => new Promise(resolve => {
   console.log(`OPEN: ${roomid}`)
   let ws = new LiveWS(roomid)
   rooms[roomid] = ws
-  let lastTime = ''
   let lastHeartbeat = 0
   let autorestart = setTimeout(() => {
     console.log(`AUTORESTART: ${roomid}`)
     ws.close()
-    resolve({ roomid, speakers, currentFilename })
+    resolve({ roomid })
   }, 1000 * 60 * 60 * 18)
   let timeout = setTimeout(() => {
     if (new Date().getTime() - lastHeartbeat > 1000 * 30) {
@@ -30,10 +27,9 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
       ws.close()
       clearTimeout(autorestart)
       clearTimeout(timeout)
-      resolve({ roomid, speakers, currentFilename })
+      resolve({ roomid })
     }
   }, 1000 * 45)
-  // let storm = []
   ws.once('live', () => {
     console.log(`READY: ${roomid}`)
   })
@@ -44,69 +40,9 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
   ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
-      if (!message.includes('TIME') || !message.includes('ONLINE')) {
-        let mid = info[2][0]
-        let uname = info[2][1]
-        let date = new Date()
-        let timestamp = date.getTime()
-        let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
-        let time = `${date.getHours()}:${date.getMinutes()}`
-        if (!currentFilename) {
-          currentFilename = filename
-        }
-        if (currentFilename !== filename) {
-          let speakerNum = Object.keys(speakers).length
-          let lastFIleName = currentFilename
-          currentFilename = filename
-          if (speakerNum) {
-            let allSpeaker = Object.keys(speakers)
-              .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
-              .join(',')
-            speakers = {}
-            await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV2\n`)
-          }
-        }
-        if (!speakers[mid]) {
-          speakers[mid] = { count: 0, uname }
-        }
-        speakers[mid].count++
-        if (lastTime !== time) {
-          lastTime = time
-          await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${ws.online}\n`)
-        }
-        dispatch.emit('danmaku', { message, roomid, mid })
-        await fs.appendFile(`${roomid}/${filename}`, `${timestamp}:${mid}:${message}\n`)
-      }
-    }
-  })
-  ws.on('heartbeat', async () => {
-    let date = new Date()
-    let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
-    if (!currentFilename) {
-      currentFilename = filename
-    }
-    if (currentFilename !== filename) {
-      let speakerNum = Object.keys(speakers).length
-      let lastFIleName = currentFilename
-      currentFilename = filename
-      if (speakerNum) {
-        let allSpeaker = Object.keys(speakers)
-          .map(key => `${key}:${speakers[key].uname}:${speakers[key].count}`)
-          .join(',')
-        speakers = {}
-        await fs.appendFile(`${roomid}/${lastFIleName}`, `SPEAKERNUM${speakerNum};${allSpeaker}\nV2\n`)
-      }
-    }
-  })
-  ws.on('heartbeat', async online => {
-    if (online > 1) {
-      let date = new Date()
-      let time = `${date.getHours()}:${date.getMinutes()}`
-      let filename = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`
-      if (lastTime !== time) {
-        lastTime = time
-        await fs.appendFile(`${roomid}/${filename}`, `TIME${lastTime}ONLINE${online}\n`)
-      }
+      let mid = info[2][0]
+      let uname = info[2][1]
+      dispatch.emit('danmaku', { message, roomid, mid, uname })
     }
   })
   ws.on('heartbeat', () => {
@@ -117,22 +53,22 @@ const openRoom = ({ roomid, speakers = {}, currentFilename = undefined }) => new
         ws.close()
         clearTimeout(autorestart)
         clearTimeout(timeout)
-        resolve({ roomid, speakers, currentFilename })
+        resolve({ roomid })
       }
     }, 1000 * 45)
   })
-  ws.on('close', async () => {
+  ws.on('close', () => {
     console.log(`CLOSE: ${roomid}`)
     clearTimeout(autorestart)
     clearTimeout(timeout)
-    resolve({ roomid, speakers, currentFilename })
+    resolve({ roomid })
   })
-  ws.on('error', async () => {
+  ws.on('error', () => {
     console.log(`ERROR: ${roomid}`)
     ws.close()
     clearTimeout(autorestart)
     clearTimeout(timeout)
-    resolve({ roomid, speakers, currentFilename })
+    resolve({ roomid })
   })
 })
 
@@ -146,16 +82,12 @@ const watch = async roomid => {
 }
 
 socket.on('info', async info => {
-  let folders = await fs.readdir('.')
   info
     .filter(({ roomid }) => roomid)
     .forEach(async ({ roomid, mid }) => {
       roomMid[roomid] = mid
       if (!rooms[roomid]) {
         rooms[roomid] = true
-        if (!folders.includes(String(roomid))) {
-          await fs.mkdir(String(roomid))
-        }
         watch(roomid)
       }
     })
