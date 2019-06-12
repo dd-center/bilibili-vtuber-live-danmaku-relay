@@ -53,6 +53,14 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
     let uname = payload.data.uname
     dispatch.emit('gift', { roomid, mid, giftId, totalCoin, coinType, uname })
   })
+  ws.on('GUARD_BUY', payload => {
+    let mid = payload.data.uid
+    let uname = payload.data.username
+    let num = payload.data.num
+    let price = payload.data.price
+    let giftId = payload.data.gift_id
+    dispatch.emit('guard', { roomid, mid, uname, num, price, giftId })
+  })
 
   ws.on('heartbeat', () => {
     lastHeartbeat = new Date().getTime()
