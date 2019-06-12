@@ -50,7 +50,8 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
     let mid = payload.data.uid
     let giftId = payload.data.giftId
     let totalCoin = payload.data.total_coin
-    dispatch.emit('gift', { roomid, mid, giftId, totalCoin, coinType })
+    let uname = payload.data.uname
+    dispatch.emit('gift', { roomid, mid, giftId, totalCoin, coinType, uname })
   })
 
   ws.on('heartbeat', () => {
