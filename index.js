@@ -59,7 +59,8 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
     let num = payload.data.num
     let price = payload.data.price
     let giftId = payload.data.gift_id
-    dispatch.emit('guard', { roomid, mid, uname, num, price, giftId })
+    let level = payload.data.guard_level
+    dispatch.emit('guard', { roomid, mid, uname, num, price, giftId, level })
   })
 
   ws.on('heartbeat', () => {

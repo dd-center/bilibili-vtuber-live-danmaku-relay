@@ -58,7 +58,7 @@
 
   * `guard`: 新舰长
 
-    `{ roomid, mid, uname, num, price, giftId }`
+    `{ roomid, mid, uname, num, price, giftId, level }`
 
     * roomid: 房间号
     * mid: 新舰长数字id
@@ -66,3 +66,4 @@
     * num: 数量
     * price: 价格 (如198000)
     * giftId: 礼物ID
+    * level: 舰长/提督/总督 应该是(1/2/3)
