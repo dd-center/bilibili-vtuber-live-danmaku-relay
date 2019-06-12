@@ -25,13 +25,13 @@
 
   * `ROUND`: 轮播
 
-    `{ roomid, mid }``
+    `{ roomid, mid }`
 
     - 同上
 
   * `online`: 人气刷新
 
-    `{ roomid, mid, online }``
+    `{ roomid, mid, online }`
 
     - 同上
     - online: 人气值
