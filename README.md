@@ -1,4 +1,4 @@
-# bilibili-live-danmaku-recorder
+# bilibili-vtuber-live-danmaku-relay
 哔哩哔哩直播事件转发程序
 
 艺能:
