@@ -5,6 +5,7 @@ const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
 
 const LiveWS = require('bilibili-live-ws')
+const no = require('./env')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -102,6 +103,7 @@ const watch = async roomid => {
 socket.on('info', async info => {
   info
     .filter(({ roomid }) => roomid)
+    .filter(({ roomid }) => !no.includes(roomid))
     .forEach(async ({ roomid, mid }) => {
       roomMid[roomid] = mid
       if (!rooms[roomid]) {
