@@ -36,31 +36,37 @@
     - 同上
     - online: 人气值
 
+  * `title`: 直播标题改变
+
+    `{ roomid, mid, title}`
+
+    * 同上
+    * title: 新标题
+  
   * `danmaku`: 弹幕
 
     `{ message, roomid, mid, uname }`
 
-    * message: 弹幕消息
-    * roomid: 房间号
-    * mid: 发送者数字ID
+    * 同上
+  * message: 弹幕消息
     * uname: 发送者昵称
-
+    
   * `gift`: 礼物
-
+  
     `{ roomid, mid, giftId, totalCoin, coinType, uname }`
-
-    * roomid: 房间号
+  
+  * 同上
     * mid: 发送者数字ID
-    * uname: 发送者昵称
+  * uname: 发送者昵称
     * giftId: 礼物ID
-    * totalCoin
+  * totalCoin
     * coinType: 金币还是银币呢→_→?
-
+  
   * `guard`: 新舰长
-
+  
     `{ roomid, mid, uname, num, price, giftId, level }`
-
-    * roomid: 房间号
+  
+    * 同上
     * mid: 新舰长数字id
     * uname: 昵称
     * num: 数量

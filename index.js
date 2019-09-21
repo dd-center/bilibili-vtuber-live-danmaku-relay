@@ -38,6 +38,7 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
   ws.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid: roomMid[roomid] }))
   ws.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid: roomMid[roomid] }))
   ws.on('heartbeat', online => dispatch.emit('online', { roomid, mid: roomMid[roomid], online }))
+  ws.on('ROOM_CHANGE', ({ data: { title } }) => dispatch.emit('title', { roomid, mid: roomMid[roomid], title }))
   ws.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       let message = info[1]
