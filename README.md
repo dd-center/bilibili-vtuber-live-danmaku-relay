@@ -73,3 +73,13 @@
     * price: 价格 (如198000)
     * giftId: 礼物ID
     * level: 舰长/提督/总督 应该是(3/2/1)
+    
+## Deploy Using Docker
+
+Run using:
+
+`docker run -d -p 2151:8001 -p 2152:9003 afanyiyu/bilibili-vtuber-live-danmaku-relay`
+
+Internal build using:
+
+`docker build -t dd-center/bilibili-vtuber-live-danmaku-relay github.com/dd-center/bilibili-vtuber-live-danmaku-relay`

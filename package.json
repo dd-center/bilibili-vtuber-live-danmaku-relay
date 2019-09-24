@@ -1,5 +1,10 @@
 {
+  "main": "index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node index.js"
+  },
   "dependencies": {
+    "cross-env": "^5.2.0",
     "bilibili-live-ws": "^1.1.2",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0"
