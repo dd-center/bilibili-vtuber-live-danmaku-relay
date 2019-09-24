@@ -78,8 +78,8 @@
 
 Run using:
 
-docker run -d -p 2151:8001 -p 2152:9003 afanyiyu/bilibili-vtuber-live-danmaku-relay
+`docker run -d -p 2151:8001 -p 2152:9003 afanyiyu/bilibili-vtuber-live-danmaku-relay`
 
 Internal build using:
 
-docker build -t dd-center/bilibili-vtuber-live-danmaku-relay github.com/dd-center/bilibili-vtuber-live-danmaku-relay
+`docker build -t dd-center/bilibili-vtuber-live-danmaku-relay github.com/dd-center/bilibili-vtuber-live-danmaku-relay`
