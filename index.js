@@ -4,7 +4,7 @@ const socket = io('http://0.0.0.0:8001')
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
 
-const LiveWS = require('bilibili-live-ws')
+const { LiveTCP } = require('bilibili-live-ws')
 const no = require('./env')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -14,7 +14,7 @@ const roomMid = {}
 
 const openRoom = ({ roomid }) => new Promise(resolve => {
   console.log(`OPEN: ${roomid}`)
-  const live = new LiveWS(roomid)
+  const live = new LiveTCP(roomid)
   rooms[roomid] = live
   let lastHeartbeat = 0
   const autorestart = setTimeout(() => {
