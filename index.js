@@ -40,7 +40,8 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
       const message = info[1]
       const mid = info[2][0]
       const uname = info[2][1]
-      dispatch.emit('danmaku', { message, roomid, mid, uname })
+      const timestamp = info[0][4]
+      dispatch.emit('danmaku', { message, roomid, mid, uname, timestamp })
     }
   })
   live.on('SEND_GIFT', payload => {
