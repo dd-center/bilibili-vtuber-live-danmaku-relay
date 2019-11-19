@@ -9,13 +9,11 @@ const no = require('./env')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-const rooms = {}
-const roomMid = {}
+const rooms = new Set()
 
-const openRoom = ({ roomid }) => new Promise(resolve => {
+const openRoom = ({ roomid, mid }) => new Promise(resolve => {
   console.log(`OPEN: ${roomid}`)
   const live = new LiveTCP(roomid)
-  rooms[roomid] = live
   let lastHeartbeat = 0
   const autorestart = setTimeout(() => {
     console.log(`AUTORESTART: ${roomid}`)
@@ -27,14 +25,12 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
       live.close()
     }
   }, 1000 * 45)
-  live.once('live', () => {
-    console.log(`READY: ${roomid}`)
-  })
-  live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid: roomMid[roomid] }))
-  live.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid: roomMid[roomid] }))
-  live.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid: roomMid[roomid] }))
-  live.on('heartbeat', online => dispatch.emit('online', { roomid, mid: roomMid[roomid], online }))
-  live.on('ROOM_CHANGE', ({ data: { title } }) => dispatch.emit('title', { roomid, mid: roomMid[roomid], title }))
+  live.once('live', () => console.log(`LIVE: ${roomid}`))
+  live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid }))
+  live.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid }))
+  live.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid }))
+  live.on('heartbeat', online => dispatch.emit('online', { roomid, mid, online }))
+  live.on('ROOM_CHANGE', ({ data: { title } }) => dispatch.emit('title', { roomid, mid, title }))
   live.on('DANMU_MSG', async ({ info }) => {
     if (!info[0][9]) {
       const message = info[1]
@@ -72,7 +68,6 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
     }, 1000 * 45)
   })
   live.on('close', () => {
-    console.log(`CLOSE: ${roomid}`)
     clearTimeout(autorestart)
     clearTimeout(timeout)
     resolve({ roomid })
@@ -82,12 +77,16 @@ const openRoom = ({ roomid }) => new Promise(resolve => {
   })
 })
 
-const watch = async roomid => {
-  let object = { roomid }
-  for (;;) {
-    object = await openRoom(object)
-    await wait(250)
-    console.log(`REOPEN: ${roomid}`)
+const watch = async ({ roomid, mid }) => {
+  if (!rooms.has(roomid)) {
+    rooms.add(roomid)
+    console.log(`WATCH: ${roomid}`)
+    while (true) {
+      await openRoom({ roomid, mid })
+      console.log(`CLOSE: ${roomid}`)
+      await wait(50)
+      console.log(`REOPEN: ${roomid}`)
+    }
   }
 }
 
@@ -95,12 +94,6 @@ socket.on('info', async info => {
   info
     .filter(({ roomid }) => roomid)
     .filter(({ roomid }) => !no.includes(roomid))
-    .forEach(async ({ roomid, mid }) => {
-      roomMid[roomid] = mid
-      if (!rooms[roomid]) {
-        rooms[roomid] = true
-        watch(roomid)
-      }
-    })
+    .forEach(({ roomid, mid }) => watch({ roomid, mid }))
   console.log('REFRESH')
 })
