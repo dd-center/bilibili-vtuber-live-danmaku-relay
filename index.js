@@ -14,16 +14,13 @@ const rooms = new Set()
 const openRoom = ({ roomid, mid }) => new Promise(resolve => {
   console.log(`OPEN: ${roomid}`)
   const live = new LiveTCP(roomid)
-  let lastHeartbeat = 0
   const autorestart = setTimeout(() => {
     console.log(`AUTORESTART: ${roomid}`)
     live.close()
   }, 1000 * 60 * 60 * 18)
   let timeout = setTimeout(() => {
-    if (new Date().getTime() - lastHeartbeat > 1000 * 30) {
-      console.log(`TIMEOUT: ${roomid}`)
-      live.close()
-    }
+    console.log(`TIMEOUT: ${roomid}`)
+    live.close()
   }, 1000 * 45)
   live.once('live', () => console.log(`LIVE: ${roomid}`))
   live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid }))
@@ -59,12 +56,10 @@ const openRoom = ({ roomid, mid }) => new Promise(resolve => {
   })
 
   live.on('heartbeat', () => {
-    lastHeartbeat = new Date().getTime()
+    clearTimeout(timeout)
     timeout = setTimeout(() => {
-      if (new Date().getTime() - lastHeartbeat > 1000 * 30) {
-        console.log(`TIMEOUT: ${roomid}`)
-        live.close()
-      }
+      console.log(`TIMEOUT: ${roomid}`)
+      live.close()
     }, 1000 * 45)
   })
   live.on('close', () => {
