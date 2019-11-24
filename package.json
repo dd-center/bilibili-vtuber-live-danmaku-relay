@@ -4,9 +4,9 @@
     "start": "cross-env NODE_ENV=production node index.js"
   },
   "dependencies": {
-    "bilibili-live-ws": "^2.0.2",
+    "bilibili-live-ws": "^3.1.0",
     "cross-env": "^6.0.3",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.3.0",
     "socket.io-client": "^2.2.0"
   }
 }

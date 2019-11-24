@@ -4,24 +4,16 @@ const socket = io('http://0.0.0.0:8001')
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
 
-const { LiveWS } = require('bilibili-live-ws')
+const { KeepLiveWS } = require('bilibili-live-ws')
 const no = require('./env')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const rooms = new Set()
 
-const openRoom = ({ roomid, mid }) => new Promise(resolve => {
+const openRoom = ({ roomid, mid }) => {
   console.log(`OPEN: ${roomid}`)
-  const live = new LiveWS(roomid)
-  const autorestart = setTimeout(() => {
-    console.log(`AUTORESTART: ${roomid}`)
-    live.close()
-  }, 1000 * 60 * 60 * 18)
-  let timeout = setTimeout(() => {
-    console.log(`TIMEOUT: ${roomid}`)
-    live.close()
-  }, 1000 * 45)
+  const live = new KeepLiveWS(roomid)
   live.once('live', () => console.log(`LIVE: ${roomid}`))
   live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid }))
   live.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid }))
@@ -54,23 +46,10 @@ const openRoom = ({ roomid, mid }) => new Promise(resolve => {
     const level = payload.data.guard_level
     dispatch.emit('guard', { roomid, mid, uname, num, price, giftId, level })
   })
-
-  live.on('heartbeat', () => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      console.log(`TIMEOUT: ${roomid}`)
-      live.close()
-    }, 1000 * 45)
+  live.on('error', e => {
+    console.log(`ERROR: ${roomid}`, e)
   })
-  live.on('close', () => {
-    clearTimeout(autorestart)
-    clearTimeout(timeout)
-    resolve({ roomid })
-  })
-  live.on('error', () => {
-    console.log(`ERROR: ${roomid}`)
-  })
-})
+}
 
 const watch = async ({ roomid, mid }) => {
   if (!rooms.has(roomid)) {
