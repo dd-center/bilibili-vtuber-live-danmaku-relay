@@ -57,8 +57,11 @@ const openRoom = ({ roomid, mid }) => {
     const level = payload.data.guard_level
     dispatch.emit('guard', { roomid, mid, uname, num, price, giftId, level })
   })
-  live.on('error', e => {
+  live.on('error', () => {
     console.log(`ERROR: ${roomid}`)
+  })
+  live.on('close', () => {
+    live.params[1] = wssUrls[Math.floor(wssUrls.length * Math.random())]
   })
 }
 
