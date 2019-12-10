@@ -13,7 +13,7 @@ const rooms = new Set()
 let wssUrls = ['wss://broadcastlv.chat.bilibili.com/sub']
 
 const refreshWssUrls = async () => {
-  const { body: { data: { host_server_list: hosts } } } = await got('https://api.live.bilibili.com/room/v1/Danmu/getConf', { json: true }).catch(() => ({ body: { data: {} } }))
+  const { data: { host_server_list: hosts } } = await got('https://api.live.bilibili.com/room/v1/Danmu/getConf').json().catch(() => ({ data: {} }))
   if (hosts && hosts.length) {
     const urls = hosts.filter(({ wss_port: port }) => port === 443).map(({ host }) => `wss://${host}/sub`)
     wssUrls = urls
