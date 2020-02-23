@@ -1,4 +1,5 @@
 {
+  "name": "@dd-center/relay",
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node index.js"
