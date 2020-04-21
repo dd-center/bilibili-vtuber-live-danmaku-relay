@@ -1,5 +1,5 @@
 const io = require('socket.io-client')
-const socket = io('http://0.0.0.0:8001')
+const socket = io('http://0.0.0.0:8001', { autoConnect: false })
 
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
@@ -10,21 +10,22 @@ const no = require('./env')
 
 const rooms = new Set()
 
-let wssUrls = ['wss://broadcastlv.chat.bilibili.com/sub']
+let address
+let key
 
 const refreshWssUrls = async () => {
-  const { data: { host_server_list: hosts } } = await got('https://api.live.bilibili.com/room/v1/Danmu/getConf').json().catch(() => ({ data: {} }))
-  if (hosts && hosts.length) {
-    const urls = hosts.filter(({ wss_port: port }) => port === 443).map(({ host }) => `wss://${host}/sub`)
-    wssUrls = urls
+  const { data: { host_server_list: [{ host }], token } } = await got('https://api.live.bilibili.com/room/v1/Danmu/getConf').json().catch(() => ({ data: {} }))
+  if (host && token) {
+    address = `wss://${host}/sub`
+    key = token
   }
 }
-refreshWssUrls()
+
 setInterval(refreshWssUrls, 1000 * 60 * 10)
 
 const openRoom = ({ roomid, mid }) => {
   console.log(`OPEN: ${roomid}`)
-  const live = new KeepLiveWS(roomid, wssUrls[Math.floor(wssUrls.length * Math.random())])
+  const live = new KeepLiveWS(roomid, { address, key })
   live.once('live', () => console.log(`LIVE: ${roomid}`))
   live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid }))
   live.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid }))
@@ -61,7 +62,7 @@ const openRoom = ({ roomid, mid }) => {
     console.log(`ERROR: ${roomid}`)
   })
   live.on('close', () => {
-    live.params[1] = wssUrls[Math.floor(wssUrls.length * Math.random())]
+    live.params[1] = { key, address }
   })
 }
 
@@ -80,3 +81,6 @@ socket.on('info', async info => {
     .forEach(({ roomid, mid }) => watch({ roomid, mid }))
   console.log('REFRESH')
 })
+
+const start = () => refreshWssUrls().then(socket.open()).catch(start)
+start()
