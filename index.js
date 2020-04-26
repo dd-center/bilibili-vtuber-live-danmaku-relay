@@ -1,5 +1,7 @@
 const io = require('socket.io-client')
 const socket = io('http://0.0.0.0:8001', { autoConnect: false })
+// dev use next line, comment out above
+// const socket = io('https://api.vtbs.moe', { autoConnect: false })
 
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
