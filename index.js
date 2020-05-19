@@ -1,7 +1,7 @@
 const io = require('socket.io-client')
-const socket = io('http://0.0.0.0:8001', { autoConnect: false })
+const socket = io('http://0.0.0.0:8001')
 // dev use next line, comment out above
-// const socket = io('https://api.vtbs.moe', { autoConnect: false })
+// const socket = io('https://api.vtbs.moe')
 
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
@@ -10,22 +10,41 @@ const got = require('got')
 const { KeepLiveWS } = require('bilibili-live-ws')
 const no = require('./env')
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 const rooms = new Set()
 
-let address
-let key
+const waiting = []
 
-const refreshWssUrls = async () => {
-  const { data: { host_server_list: [{ host }], token } } = await got('https://api.live.bilibili.com/room/v1/Danmu/getConf').json().catch(() => ({ data: {} }))
-  if (host && token) {
-    address = `wss://${host}/sub`
-    key = token
+const processWaiting = async () => {
+  console.log('processWaiting')
+  while (waiting.length) {
+    await wait(500)
+    const { url, resolve } = waiting.shift()
+    got(url).json().then(resolve).catch(() => {
+      console.error('redo', url)
+      waiting.push({ url, resolve })
+      if (waiting.length === 1) {
+        processWaiting()
+      }
+    })
   }
 }
 
-setInterval(refreshWssUrls, 1000 * 60 * 10)
+const getConf = roomid => {
+  const p = new Promise(resolve => {
+    waiting.push({ resolve, url: `https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=${roomid}` })
+  })
+  if (waiting.length === 1) {
+    processWaiting()
+  }
+  return p.then(({ data: { host_server_list: [{ host }], token } }) => {
+    return { address: `wss://${host}/sub`, key: token }
+  })
+}
 
-const openRoom = ({ roomid, mid }) => {
+const openRoom = async ({ roomid, mid }) => {
+  const { address, key } = await getConf(roomid)
   console.log(`OPEN: ${roomid}`)
   const live = new KeepLiveWS(roomid, { address, key })
   live.once('live', () => console.log(`LIVE: ${roomid}`))
@@ -63,7 +82,8 @@ const openRoom = ({ roomid, mid }) => {
   live.on('error', () => {
     console.log(`ERROR: ${roomid}`)
   })
-  live.on('close', () => {
+  live.on('close', async () => {
+    const { address, key } = await getConf(roomid)
     live.params[1] = { key, address }
   })
 }
@@ -83,6 +103,3 @@ socket.on('info', async info => {
     .forEach(({ roomid, mid }) => watch({ roomid, mid }))
   console.log('REFRESH')
 })
-
-const start = () => refreshWssUrls().then(socket.open()).catch(start)
-start()
