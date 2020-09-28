@@ -6,8 +6,8 @@ const socket = io('http://0.0.0.0:8001')
 const Server = require('socket.io')
 const dispatch = new Server(9003, { serveClient: false })
 
-const got = require('got')
 const { KeepLiveWS } = require('bilibili-live-ws')
+const { getConf: getConfW } = require('bilibili-live-ws/extra')
 const no = require('./env')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -19,11 +19,11 @@ const waiting = []
 const processWaiting = async () => {
   console.log('processWaiting')
   while (waiting.length) {
-    await wait(1000)
-    const { url, resolve } = waiting.shift()
-    got(url).json().then(resolve).catch(() => {
-      console.error('redo', url)
-      waiting.push({ url, resolve })
+    await wait(1800)
+    const { f, resolve, roomid } = waiting.shift()
+    f().then(resolve).catch(() => {
+      console.error('redo', roomid)
+      waiting.push({ f, resolve, roomid })
       if (waiting.length === 1) {
         processWaiting()
       }
@@ -33,14 +33,12 @@ const processWaiting = async () => {
 
 const getConf = roomid => {
   const p = new Promise(resolve => {
-    waiting.push({ resolve, url: `https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=${roomid}` })
+    waiting.push({ resolve, f: () => getConfW(roomid), roomid })
   })
   if (waiting.length === 1) {
     processWaiting()
   }
-  return p.then(({ data: { host_server_list: [{ host }], token } }) => {
-    return { address: `wss://${host}/sub`, key: token }
-  })
+  return p
 }
 
 const opened = new Set()
