@@ -43,11 +43,23 @@ const getConf = roomid => {
   })
 }
 
+const opened = new Set()
+const lived = new Set()
+const printStatus = () => {
+  console.log(`living/opening: ${lived.size}/${opened.size}`)
+}
+
 const openRoom = async ({ roomid, mid }) => {
   const { address, key } = await getConf(roomid)
   console.log(`OPEN: ${roomid}`)
+  opened.add(roomid)
+  printStatus()
   const live = new KeepLiveWS(roomid, { address, key })
-  live.once('live', () => console.log(`LIVE: ${roomid}`))
+  live.on('live', () => {
+    console.log(`LIVE: ${roomid}`)
+    lived.add(roomid)
+    printStatus()
+  })
   live.on('LIVE', () => dispatch.emit('LIVE', { roomid, mid }))
   live.on('PREPARING', () => dispatch.emit('PREPARING', { roomid, mid }))
   live.on('ROUND', () => dispatch.emit('ROUND', { roomid, mid }))
@@ -81,8 +93,12 @@ const openRoom = async ({ roomid, mid }) => {
   })
   live.on('error', () => {
     console.log(`ERROR: ${roomid}`)
+    lived.delete(roomid)
+    printStatus()
   })
   live.on('close', async () => {
+    lived.delete(roomid)
+    printStatus()
     const { address, key } = await getConf(roomid)
     live.params[1] = { key, address }
   })
