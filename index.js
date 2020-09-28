@@ -19,7 +19,7 @@ const waiting = []
 const processWaiting = async () => {
   console.log('processWaiting')
   while (waiting.length) {
-    await wait(500)
+    await wait(1000)
     const { url, resolve } = waiting.shift()
     got(url).json().then(resolve).catch(() => {
       console.error('redo', url)
