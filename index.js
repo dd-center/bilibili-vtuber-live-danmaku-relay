@@ -97,6 +97,7 @@ const openRoom = async ({ roomid, mid }) => {
     printStatus()
   })
   live.on('close', async () => {
+    console.log(`CLOSE: ${roomid}`)
     lived.delete(roomid)
     printStatus()
     const { address, key } = await getConf(roomid)
